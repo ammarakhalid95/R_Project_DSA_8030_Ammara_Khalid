@@ -1,0 +1,127 @@
+---
+title: "Greenville Traffic Analysis from 2006 to 2023 - Exploring In Depth"
+author: "by Ammara Khalid"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: cerulean
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readxl)
+library(ggplot2)
+library(dplyr) 
+library(shiny)
+library(DT)
+
+gvl_tc <-read_excel("Greenville_Traffic_Count.xlsx")
+
+
+
+```
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+
+```{r}
+
+sliderInput('YearRange', label = 'Please Select A Range of Years', min =
+ min(gvl_tc$AADT_Year), max = max(gvl_tc$AADT_Year), value = c(2006,2023),sep = "")
+
+selectInput('SelectStation', "Please Select A Station", unique(gvl_tc$Station))
+
+selectInput('SelectRouteNo', "Please Select A Route No", unique(gvl_tc$Route_No))
+
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Estimated Annual Average Driving Traffic By Selected Station And Year
+
+```{r}
+
+
+library(plotly)
+
+
+renderPlotly(
+ plot_ly(gvl_tc %>% filter(Station==input$SelectStation), x = ~AADT_Year, y = ~Estimate_Annual_Average_DT, type = 'scatter', mode = 'lines',title = ~Route_Location
+   ) %>%
+ layout( xaxis = list(range = input$YearRange)))
+ 
+
+
+```
+
+### See Table After Selecting Station And/Or Route No
+
+```{r}
+
+renderTable(
+  gvl_tc %>% filter(Route_No == input$SelectRouteNo | 
+                      Station == input$SelectStation)
+)
+
+
+
+```
+
+
+
+
+Column {.tabset data-width=25%}
+-----------------------------------------------------------------------
+
+### Station - Low
+```{r}
+
+renderValueBox({
+  
+  selected_data <- gvl_tc[gvl_tc$Station == input$SelectStation, ]
+  valueBox(value = min(selected_data$Estimate_Annual_Average_DT), caption = "Lowest Estimated Annual Average Driving Traffic By Station")
+  
+})
+
+```
+### Station - High
+```{r}
+
+renderValueBox({
+  
+  selected_data <- gvl_tc[gvl_tc$Station == input$SelectStation, ]
+  valueBox(value = max(selected_data$Estimate_Annual_Average_DT), caption = "Highest Estimated Annual Average Driving Traffic by Station")
+  
+})
+
+
+```
+### Route No. - Low
+```{r}
+
+renderValueBox({
+  
+  selected_data <- gvl_tc[gvl_tc$Route_No == input$SelectRouteNo, ]
+  valueBox(value = min(selected_data$Estimate_Annual_Average_DT), caption = "Lowest Estimated Annual Average Driving Traffic By Route No.")
+  
+})
+
+
+```
+### Route No. - High
+```{r}
+
+renderValueBox({
+  
+  selected_data <- gvl_tc[gvl_tc$Route_No == input$SelectRouteNo,  ]
+  valueBox(value = max(selected_data$Estimate_Annual_Average_DT), caption = "Highest Estimated Annual Average Driving Traffic By Route No.")
+  
+})
+
+
+```
